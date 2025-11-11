@@ -8,39 +8,39 @@ A simple static web page to export archival memories from Letta agents as compre
 - Secure: API key never leaves your browser
 - Web interface for easy memory export
 - ZIP compression for universal compatibility
-- Can be hosted on GitHub Pages or any static host
+- Works with any Letta server (Cloud or self-hosted)
 
 ## Usage
 
 ### Online
 
-Visit the hosted version: [https://cpfiffer.github.io/letta-archival-export](https://cpfiffer.github.io/letta-archival-export)
+Visit: [https://cpfiffer.github.io/letta-archival-export](https://cpfiffer.github.io/letta-archival-export)
 
 ### Local
 
 1. Download `index.html`
 2. Open it in your browser
-3. Enter your Letta API key, base URL (optional), and agent ID
-4. Click "Export Memories"
-5. A ZIP file will download automatically
+3. Enter your Letta API key and agent ID
+4. (Optional) Change base URL for self-hosted servers
+5. Click "Export Memories"
+6. ZIP file downloads automatically
 
-## Hosting Your Own
+## Hosting
 
-### GitHub Pages
+### GitHub Pages (Recommended)
 
 1. Fork this repository
-2. Go to Settings → Pages
-3. Set source to "main branch"
-4. Your page will be available at `https://yourusername.github.io/letta-archival-export`
+2. Settings → Pages → Source: "main branch"
+3. Access at `https://yourusername.github.io/letta-archival-export`
 
-### Other Static Hosts
+### Other Options
 
-Upload `index.html` to any static hosting service:
+Host `index.html` anywhere:
 - Netlify
-- Vercel
+- Vercel  
 - Cloudflare Pages
-- Amazon S3
-- Or just open the file locally
+- Any static host
+- Or open locally in browser
 
 ## Output Format
 
@@ -108,33 +108,22 @@ The JSON file is an array of passage objects. Each passage contains:
 
 ## Requirements
 
-- Modern web browser with JavaScript enabled
+- Modern web browser with JavaScript
 - Letta API key
-- Agent ID (must have `agent-` prefix)
-- Internet connection (for CDN resources)
+- Agent ID (format: `agent-<uuid>`)
 
 ## Privacy & Security
 
-- All API calls are made directly from your browser to Letta's API
-- Your API key is never sent to any third-party server
-- No data is collected or stored by this tool
-- Everything runs client-side in your browser
-
-## Error Handling
-
-The tool will display error messages for:
-- Missing API key or agent ID
-- Invalid API credentials
-- Agent not found
-- API connection issues
-- Network errors
+- API calls go directly from browser to Letta API
+- API key never sent to third parties
+- No data collection or storage
+- Fully client-side
 
 ## Technical Details
 
-- Uses [JSZip](https://stoutner.com/jszip/) for client-side ZIP compression
-- Pure JavaScript, no build process required
-- Compatible with all modern browsers
-- Works offline after initial load (CDN resources cached)
+- Uses [JSZip](https://stoutner.com/jszip/) for compression
+- Pure JavaScript, no build process
+- Works with all modern browsers
 
 ## License
 
