@@ -145,7 +145,7 @@
             while (true) {
                 updateProgress(`Fetching page ${pageNum}...`);
 
-                const url = new URL(`/v1/agents/${agentId}/passages`, baseUrl);
+                const url = new URL(`/v1/agents/${agentId}/archival-memory`, baseUrl);
                 if (afterCursor) {
                     url.searchParams.append('after', afterCursor);
                 }
