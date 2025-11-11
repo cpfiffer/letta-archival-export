@@ -145,12 +145,14 @@
             while (true) {
                 updateProgress(`Fetching page ${pageNum}...`);
 
-                const url = new URL(`/v1/agents/${agentId}/archival`, baseUrl);
+                const url = new URL(`/v1/agents/${agentId}/passages`, baseUrl);
                 if (afterCursor) {
                     url.searchParams.append('after', afterCursor);
                 }
                 url.searchParams.append('limit', pageLimit);
                 url.searchParams.append('ascending', 'true');
+
+                console.log('Fetching:', url.toString());
 
                 const response = await fetch(url, {
                     method: 'GET',
@@ -160,12 +162,16 @@
                     }
                 });
 
+                console.log('Response status:', response.status);
+
                 if (!response.ok) {
                     const error = await response.text();
+                    console.error('API error:', error);
                     throw new Error(`API error (${response.status}): ${error}`);
                 }
 
                 const passages = await response.json();
+                console.log('Received passages:', passages?.length || 0);
 
                 if (!passages || passages.length === 0) {
                     updateProgress('No more results');
