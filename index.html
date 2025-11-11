@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Letta Memory Exporter</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+    <style>
+        body { 
+            font-family: system-ui, -apple-system, sans-serif;
+            max-width: 600px;
+            margin: 50px auto;
+            padding: 20px;
+            line-height: 1.6;
+        }
+        h1 { color: #333; }
+        label { 
+            display: block;
+            margin-top: 15px;
+            font-weight: 500;
+            color: #555;
+        }
+        input {
+            width: 100%;
+            padding: 10px;
+            margin: 5px 0;
+            box-sizing: border-box;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 14px;
+        }
+        input:focus {
+            outline: none;
+            border-color: #007bff;
+        }
+        button {
+            margin-top: 20px;
+            padding: 12px 24px;
+            background: #007bff;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+            width: 100%;
+        }
+        button:hover { background: #0056b3; }
+        button:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+        .status {
+            margin-top: 20px;
+            padding: 15px;
+            border-radius: 4px;
+            display: none;
+        }
+        .status.show { display: block; }
+        .error {
+            background: #fee;
+            color: #c00;
+            border: 1px solid #fcc;
+        }
+        .success {
+            background: #efe;
+            color: #060;
+            border: 1px solid #cfc;
+        }
+        .info {
+            background: #e3f2fd;
+            color: #1565c0;
+            border: 1px solid #bbdefb;
+        }
+        .progress {
+            margin-top: 10px;
+            font-size: 14px;
+            color: #666;
+        }
+        footer {
+            margin-top: 40px;
+            padding-top: 20px;
+            border-top: 1px solid #eee;
+            text-align: center;
+            color: #999;
+            font-size: 14px;
+        }
+        footer a {
+            color: #007bff;
+            text-decoration: none;
+        }
+        footer a:hover {
+            text-decoration: underline;
+        }
+    </style>
+</head>
+<body>
+    <h1>Letta Memory Exporter</h1>
+    <p>Export archival memories from your Letta agent as a ZIP file.</p>
+    
+    <form id="exportForm">
+        <label for="apiKey">Letta API Key:</label>
+        <input type="password" id="apiKey" required placeholder="sk-...">
+        
+        <label for="baseUrl">Base URL (optional):</label>
+        <input type="text" id="baseUrl" placeholder="https://api.letta.com" value="https://api.letta.com">
+        
+        <label for="agentId">Agent ID:</label>
+        <input type="text" id="agentId" required placeholder="agent-xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx">
+        
+        <button type="submit" id="submitBtn">Export Memories</button>
+    </form>
+    
+    <div id="status" class="status"></div>
+    
+    <footer>
+        <p>
+            <a href="https://github.com/cpfiffer/letta-archival-export" target="_blank">View on GitHub</a>
+            | <a href="https://letta.com" target="_blank">Letta</a>
+        </p>
+    </footer>
+
+    <script>
+        const form = document.getElementById('exportForm');
+        const statusDiv = document.getElementById('status');
+        const submitBtn = document.getElementById('submitBtn');
+
+        function showStatus(message, type) {
+            statusDiv.textContent = message;
+            statusDiv.className = `status ${type} show`;
+        }
+
+        function updateProgress(message) {
+            const progress = document.createElement('div');
+            progress.className = 'progress';
+            progress.textContent = message;
+            statusDiv.appendChild(progress);
+        }
+
+        async function fetchAllPassages(baseUrl, apiKey, agentId) {
+            const allPassages = [];
+            let afterCursor = null;
+            const pageLimit = 100;
+            let pageNum = 1;
+
+            while (true) {
+                updateProgress(`Fetching page ${pageNum}...`);
+
+                const url = new URL(`/v1/agents/${agentId}/archival`, baseUrl);
+                if (afterCursor) {
+                    url.searchParams.append('after', afterCursor);
+                }
+                url.searchParams.append('limit', pageLimit);
+                url.searchParams.append('ascending', 'true');
+
+                const response = await fetch(url, {
+                    method: 'GET',
+                    headers: {
+                        'Authorization': `Bearer ${apiKey}`,
+                        'Content-Type': 'application/json'
+                    }
+                });
+
+                if (!response.ok) {
+                    const error = await response.text();
+                    throw new Error(`API error (${response.status}): ${error}`);
+                }
+
+                const passages = await response.json();
+
+                if (!passages || passages.length === 0) {
+                    updateProgress('No more results');
+                    break;
+                }
+
+                updateProgress(`Got ${passages.length} passages`);
+
+                for (const passage of passages) {
+                    delete passage.embedding;
+                    delete passage.embedding_config;
+                    allPassages.push(passage);
+                }
+
+                if (passages.length < pageLimit) {
+                    break;
+                }
+
+                afterCursor = passages[passages.length - 1].id;
+                pageNum++;
+            }
+
+            return allPassages;
+        }
+
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const apiKey = document.getElementById('apiKey').value.trim();
+            const baseUrl = document.getElementById('baseUrl').value.trim() || 'https://api.letta.com';
+            const agentId = document.getElementById('agentId').value.trim();
+
+            statusDiv.innerHTML = '';
+            showStatus('Starting export...', 'info');
+            submitBtn.disabled = true;
+
+            try {
+                const passages = await fetchAllPassages(baseUrl, apiKey, agentId);
+                
+                updateProgress(`Total passages: ${passages.length}`);
+                updateProgress('Creating ZIP file...');
+
+                const zip = new JSZip();
+                const jsonData = JSON.stringify(passages, null, 2);
+                zip.file(`${agentId}_memories.json`, jsonData);
+
+                updateProgress('Compressing...');
+                const blob = await zip.generateAsync({
+                    type: 'blob',
+                    compression: 'DEFLATE',
+                    compressionOptions: { level: 9 }
+                });
+
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `${agentId}_memories.zip`;
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                URL.revokeObjectURL(url);
+
+                showStatus(`✓ Export successful! Downloaded ${passages.length} memories`, 'success');
+
+            } catch (err) {
+                showStatus(`Error: ${err.message}`, 'error');
+                console.error(err);
+            } finally {
+                submitBtn.disabled = false;
+            }
+        });
+    </script>
+</body>
+</html>

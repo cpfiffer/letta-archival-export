@@ -1,53 +1,46 @@
 # Letta Memory Exporter
 
-A simple Modal web service to export archival memories from Letta agents as compressed JSON archives.
+A simple static web page to export archival memories from Letta agents as compressed ZIP archives.
 
 ## Features
 
+- Pure client-side, no server required
+- Secure: API key never leaves your browser
 - Web interface for easy memory export
-- Accepts Letta API key and agent ID
-- Returns compressed ZIP file containing agent memories
-- Deployed on Modal for serverless scaling
-
-## Deployment
-
-1. Install Modal:
-```bash
-pip install modal
-```
-
-2. Authenticate with Modal:
-```bash
-modal setup
-```
-
-3. Deploy the service:
-```bash
-modal deploy modal_export_service.py
-```
-
-Modal will provide a public URL for your service.
+- ZIP compression for universal compatibility
+- Can be hosted on GitHub Pages or any static host
 
 ## Usage
 
-### Web Interface
+### Online
 
-1. Navigate to your deployed Modal URL
-2. Enter your Letta API key
-3. Enter your agent ID (format: `agent-<uuid>`)
+Visit the hosted version: [https://cpfiffer.github.io/letta-archival-export](https://cpfiffer.github.io/letta-archival-export)
+
+### Local
+
+1. Download `index.html`
+2. Open it in your browser
+3. Enter your Letta API key, base URL (optional), and agent ID
 4. Click "Export Memories"
 5. A ZIP file will download automatically
 
-### API Endpoint
+## Hosting Your Own
 
-You can also POST directly to the `/export` endpoint:
+### GitHub Pages
 
-```bash
-curl -X POST https://your-modal-url.modal.run/export \
-  -H "Content-Type: application/json" \
-  -d '{"api_key": "your-letta-api-key", "agent_id": "agent-xxx"}' \
-  --output memories.zip
-```
+1. Fork this repository
+2. Go to Settings → Pages
+3. Set source to "main branch"
+4. Your page will be available at `https://yourusername.github.io/letta-archival-export`
+
+### Other Static Hosts
+
+Upload `index.html` to any static hosting service:
+- Netlify
+- Vercel
+- Cloudflare Pages
+- Amazon S3
+- Or just open the file locally
 
 ## Output Format
 
@@ -115,16 +108,34 @@ The JSON file is an array of passage objects. Each passage contains:
 
 ## Requirements
 
+- Modern web browser with JavaScript enabled
 - Letta API key
 - Agent ID (must have `agent-` prefix)
-- Internet connection
+- Internet connection (for CDN resources)
+
+## Privacy & Security
+
+- All API calls are made directly from your browser to Letta's API
+- Your API key is never sent to any third-party server
+- No data is collected or stored by this tool
+- Everything runs client-side in your browser
 
 ## Error Handling
 
-The service will return error messages for:
+The tool will display error messages for:
 - Missing API key or agent ID
 - Invalid API credentials
 - Agent not found
 - API connection issues
+- Network errors
 
-Errors are displayed in the web interface or returned as JSON with appropriate HTTP status codes.
+## Technical Details
+
+- Uses [JSZip](https://stoutner.com/jszip/) for client-side ZIP compression
+- Pure JavaScript, no build process required
+- Compatible with all modern browsers
+- Works offline after initial load (CDN resources cached)
+
+## License
+
+MIT License - see [LICENSE](LICENSE) file for details
