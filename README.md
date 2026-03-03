@@ -1,16 +1,53 @@
 # Letta Memory Exporter
 
-A simple static web page to export archival memories from Letta agents as compressed ZIP archives.
+Export archival memories from Letta agents as JSON or ZIP.
 
-## Features
+## Python CLI (Recommended)
 
-- Pure client-side, no server required
-- Secure: API key never leaves your browser
-- Web interface for easy memory export
-- ZIP compression for universal compatibility
-- Works with any Letta server (Cloud or self-hosted)
+Uses the official `letta-client` SDK with cursor pagination.
 
-## Usage
+### Install
+
+```bash
+pip install letta-client
+```
+
+### Usage
+
+```bash
+# Set your API key
+export LETTA_API_KEY=sk-...
+
+# Export as JSON (default)
+python export.py agent-xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
+
+# Export as ZIP
+python export.py agent-xxx -f zip
+
+# Custom output path
+python export.py agent-xxx -o my-export.json
+
+# Self-hosted server
+python export.py agent-xxx --base-url http://localhost:8283
+```
+
+### Options
+
+```
+positional arguments:
+  agent_id              Agent ID (agent-xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx)
+
+options:
+  --base-url URL        Letta server URL (default: https://api.letta.com)
+  --api-key KEY         API key (default: LETTA_API_KEY env var)
+  --output, -o FILE     Output file path
+  --format, -f FORMAT   json or zip (default: json)
+  --page-size N         Passages per request (default: 100)
+```
+
+## Web Interface
+
+A client-side HTML page that exports directly from your browser.
 
 ### Online
 
@@ -18,54 +55,30 @@ Visit: [https://cpfiffer.github.io/letta-archival-export](https://cpfiffer.githu
 
 ### Local
 
-1. Download `index.html`
-2. Open it in your browser
-3. Enter your Letta API key and agent ID
-4. (Optional) Change base URL for self-hosted servers
-5. Click "Export Memories"
-6. ZIP file downloads automatically
-
-## Hosting
-
-### GitHub Pages (Recommended)
-
-1. Fork this repository
-2. Settings → Pages → Source: "main branch"
-3. Access at `https://yourusername.github.io/letta-archival-export`
-
-### Other Options
-
-Host `index.html` anywhere:
-- Netlify
-- Vercel  
-- Cloudflare Pages
-- Any static host
-- Or open locally in browser
+1. Open `index.html` in your browser
+2. Enter your Letta API key and agent ID
+3. Click "Export Memories"
 
 ## Output Format
 
-The service exports a ZIP file containing a single JSON file with all archival memories (passages) from the specified agent.
-
-### JSON Structure
-
-The JSON file is an array of passage objects. Each passage contains:
+Both tools export a JSON array of passage objects with `embedding` and `embedding_config` fields removed:
 
 ```json
 [
   {
+    "text": "The actual memory content...",
+    "id": "passage-<uuid>",
+    "archive_id": "archive-<uuid>",
+    "created_at": "2025-11-05T23:04:24.901468Z",
+    "updated_at": "2025-11-05T23:04:24.941596Z",
+    "is_deleted": false,
+    "metadata": {},
+    "tags": ["production", "bug", "feature"],
     "created_by_id": "user-<uuid>",
     "last_updated_by_id": "user-<uuid>",
-    "created_at": "2025-11-05 23:04:24.901468+00:00",
-    "updated_at": "2025-11-05 23:04:24.941596+00:00",
-    "is_deleted": false,
-    "archive_id": "archive-<uuid>",
     "source_id": null,
     "file_id": null,
     "file_name": null,
-    "metadata": {},
-    "tags": ["production", "bug", "feature"],
-    "id": "passage-<uuid>",
-    "text": "The actual memory content goes here...",
     "organization_id": "org-<uuid>"
   }
 ]
@@ -83,47 +96,10 @@ The JSON file is an array of passage objects. Each passage contains:
 - `organization_id`: Organization identifier
 - `is_deleted`: Soft delete flag
 
-**Note**: The `embedding` and `embedding_config` fields are automatically removed from the export to reduce file size.
-
-## Example Memory
-
-```json
-{
-  "created_by_id": "user-2bcd6366-fc50-4c5d-9015-b5b3a3e3f988",
-  "last_updated_by_id": "user-2bcd6366-fc50-4c5d-9015-b5b3a3e3f988",
-  "created_at": "2025-11-06 01:30:07.520938+00:00",
-  "updated_at": "2025-11-06 01:30:07.536538+00:00",
-  "is_deleted": false,
-  "archive_id": "archive-ded47337-40fe-4018-ac9b-82c829f96934",
-  "source_id": null,
-  "file_id": null,
-  "file_name": null,
-  "metadata": {},
-  "tags": ["breaking-change", "archival-memory", "limits"],
-  "id": "passage-5fe757aa-d55b-41c1-9a24-4fe361d83695",
-  "text": "Archival Memory Character Limit (Cameron announcement, November 6 2025): New 8k token limit for archival memories. Exceeding this limit will throw an exception requiring users to shrink entries.",
-  "organization_id": "org-564296c0-9835-43f2-b79e-c448b26200d4"
-}
-```
-
-## Requirements
-
-- Modern web browser with JavaScript
-- Letta API key
-- Agent ID (format: `agent-<uuid>`)
-
 ## Privacy & Security
 
-- API calls go directly from browser to Letta API
-- API key never sent to third parties
-- No data collection or storage
-- Fully client-side
-
-## Technical Details
-
-- Uses [JSZip](https://stoutner.com/jszip/) for compression
-- Pure JavaScript, no build process
-- Works with all modern browsers
+- Python CLI: API key stays local
+- Web interface: API calls go directly from browser to Letta API, key never sent to third parties
 
 ## License
 
